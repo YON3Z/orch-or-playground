@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sigma, BookOpen, Play, Pause, Download, RotateCcw } from 'lucide-react';
+import { Sigma, BookOpen, Play, Pause, Download, RotateCcw, FileText } from 'lucide-react';
 import { ExperimentMode, PhysicsParams, SimulationData } from './types';
 import { PhysicsKernel } from './services/physicsEngine';
 import { Sidebar } from './components/Sidebar';
 import { Visualizer } from './components/Visualizer';
 import { Controls } from './components/Controls';
+import { Manual } from './components/Manual';
 
 export default function App() {
   const [activeMode, setActiveMode] = useState<ExperimentMode>('A');
   const [isRunning, setIsRunning] = useState(false);
   const [showTheory, setShowTheory] = useState(true);
+  const [showManual, setShowManual] = useState(false);
   
   const [data, setData] = useState<SimulationData[]>([]);
   const startTimeRef = useRef(Date.now());
@@ -98,7 +100,7 @@ export default function App() {
   }, [isRunning, activeMode]);
 
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative bg-slate-950">
       
       {/* HEADER */}
       <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-30">
@@ -129,12 +131,24 @@ export default function App() {
             ))}
           </div>
 
-          <button 
-            onClick={() => setShowTheory(!showTheory)}
-            className={`p-2 rounded-lg border transition-all ${showTheory ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-700 text-slate-400 hover:border-slate-500'}`}
-          >
-            <BookOpen className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setShowManual(true)}
+              className="p-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all flex items-center gap-2"
+              title="Open Field Manual"
+            >
+              <FileText className="w-5 h-5" />
+              <span className="hidden sm:inline text-xs font-bold">MANUAL</span>
+            </button>
+
+            <button 
+              onClick={() => setShowTheory(!showTheory)}
+              className={`p-2 rounded-lg border transition-all ${showTheory ? 'bg-slate-700 border-slate-600 text-white' : 'border-slate-700 text-slate-400 hover:border-slate-500'}`}
+              title="Toggle Theory Log"
+            >
+              <BookOpen className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -246,6 +260,11 @@ export default function App() {
           activeMode={activeMode} 
           isOpen={showTheory} 
           onClose={() => setShowTheory(false)} 
+        />
+        
+        <Manual 
+          isOpen={showManual}
+          onClose={() => setShowManual(false)}
         />
         
       </main>

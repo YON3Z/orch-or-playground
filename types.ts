@@ -7,12 +7,17 @@ export interface SimulationData {
   threshold: number;
 }
 
+export interface Reference {
+  text: string;
+  url: string;
+}
+
 export interface ExperimentTheory {
   title: string;
   mechanism: string;
   equation: string;
   hypothesis: string;
-  citation: string;
+  references: Reference[];
   controls: string[];
 }
 
