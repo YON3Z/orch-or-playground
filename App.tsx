@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sigma, BookOpen, Play, Pause } from 'lucide-react';
+import { Sigma, BookOpen, Play, Pause, Download, RotateCcw } from 'lucide-react';
 import { ExperimentMode, PhysicsParams, SimulationData } from './types';
 import { PhysicsKernel } from './services/physicsEngine';
 import { Sidebar } from './components/Sidebar';
@@ -12,6 +12,7 @@ export default function App() {
   const [showTheory, setShowTheory] = useState(true);
   
   const [data, setData] = useState<SimulationData[]>([]);
+  const startTimeRef = useRef(Date.now());
   
   const [params, setParams] = useState<PhysicsParams>({
     // Exp A
@@ -22,7 +23,10 @@ export default function App() {
     isolation: 50,
     // Exp C
     frequency: 1.0,
-    noiseFloor: 0.2
+    noiseFloor: 0.2,
+    // Exp D
+    microDose: 0,
+    doseFreq: 0.33
   });
 
   // Ref to hold current params for the animation loop
@@ -37,6 +41,33 @@ export default function App() {
     setActiveMode(mode);
     setData([]); // Clear data on mode switch
     setIsRunning(false); // Stop simulation
+    startTimeRef.current = Date.now(); // Reset time base
+  };
+
+  const handleReset = () => {
+    setData([]);
+    setIsRunning(false);
+    startTimeRef.current = Date.now();
+  };
+
+  // Export Data to CSV
+  const handleExportData = () => {
+    if (data.length === 0) return;
+
+    const headers = ['Timestamp (s)', 'Value', 'Noise', 'Threshold'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => `${row.time.toFixed(3)},${row.value},${row.noise},${row.threshold}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `coherence_lab_${activeMode}_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Simulation Loop
@@ -46,13 +77,14 @@ export default function App() {
     const simulate = () => {
       if (!isRunning) return;
       
-      const timestamp = Date.now();
+      // Calculate relative time in seconds
+      const timestamp = (Date.now() - startTimeRef.current) / 1000;
       const newPoint = PhysicsKernel.tick(timestamp, activeMode, paramsRef.current);
       
       setData(prev => {
         const newData = [...prev, newPoint];
-        // Keep last 60 points for a smooth ~1-2 sec scrolling window at 60fps
-        return newData.slice(-60); 
+        // Keep last 100 points for a smooth scrolling window
+        return newData.slice(-100); 
       });
 
       frameId = requestAnimationFrame(simulate);
@@ -78,20 +110,21 @@ export default function App() {
             <span className="font-bold text-lg tracking-tight">Coherence<span className="text-cyan-400">Protocol</span> Lab</span>
           </div>
           
-          <div className="hidden md:flex items-center bg-slate-800 rounded-lg p-1">
-            {(['A', 'B', 'C'] as ExperimentMode[]).map((mode) => (
+          <div className="hidden md:flex items-center bg-slate-800 rounded-lg p-1 overflow-x-auto">
+            {(['A', 'B', 'C', 'D'] as ExperimentMode[]).map((mode) => (
               <button 
                 key={mode}
                 onClick={() => handleModeChange(mode)}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all whitespace-nowrap ${
                   activeMode === mode 
                     ? mode === 'A' ? 'bg-cyan-500 text-slate-900 shadow-lg shadow-cyan-500/25' 
                       : mode === 'B' ? 'bg-orange-500 text-slate-900 shadow-lg shadow-orange-500/25'
-                      : 'bg-pink-500 text-slate-900 shadow-lg shadow-pink-500/25'
+                      : mode === 'C' ? 'bg-pink-500 text-slate-900 shadow-lg shadow-pink-500/25'
+                      : 'bg-indigo-500 text-slate-900 shadow-lg shadow-indigo-500/25'
                     : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {mode === 'A' ? 'Exp A: Superradiance' : mode === 'B' ? 'Exp B: Gravity' : 'Exp C: Entrainment'}
+                {mode === 'A' ? 'Exp A: Superradiance' : mode === 'B' ? 'Exp B: Gravity' : mode === 'C' ? 'Exp C: Entrainment' : 'Exp D: Microdosing'}
               </button>
             ))}
           </div>
@@ -107,7 +140,7 @@ export default function App() {
 
       {/* MOBILE NAV (Visible only on small screens) */}
       <div className="md:hidden p-4 bg-slate-900 border-b border-slate-800 flex justify-between gap-2 overflow-x-auto">
-         {(['A', 'B', 'C'] as ExperimentMode[]).map((mode) => (
+         {(['A', 'B', 'C', 'D'] as ExperimentMode[]).map((mode) => (
             <button 
               key={mode}
               onClick={() => handleModeChange(mode)}
@@ -132,25 +165,50 @@ export default function App() {
               {activeMode === 'A' && "Experiment A: Anesthetic Inhibition"}
               {activeMode === 'B' && "Experiment B: Gravitational Decoherence"}
               {activeMode === 'C' && "Experiment C: Bio-Magnetic Entrainment"}
+              {activeMode === 'D' && "Experiment D: Neuroplasticity Modulation"}
             </h1>
             <p className="text-slate-400 max-w-2xl text-sm sm:text-base">
               {activeMode === 'A' && "Testing the hypothesis that consciousness requires collective superradiance in Tryptophan networks."}
               {activeMode === 'B' && "Isolating the Gravitational Self-Energy (E_G) term by removing thermal and seismic noise."}
               {activeMode === 'C' && "Validating the 'Cardiac Binary' entrainment via Earth-Ionosphere resonance frequencies."}
+              {activeMode === 'D' && "Modeling the effects of sub-perceptual psilocybin doses on neural network plasticity and coherence."}
             </p>
           </div>
           
-          <button 
-            onClick={() => setIsRunning(!isRunning)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-lg transition-all w-full sm:w-auto justify-center ${
-              isRunning 
-                ? 'bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20' 
-                : 'bg-green-500/10 text-green-400 border border-green-500/50 hover:bg-green-500/20'
-            }`}
-          >
-            {isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            {isRunning ? 'PAUSE' : 'START SIMULATION'}
-          </button>
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <button 
+              onClick={handleReset}
+              className="p-3 rounded-xl font-bold border bg-slate-900 border-slate-800 text-slate-500 hover:bg-slate-800 hover:text-white transition-all"
+              title="Reset Simulation"
+            >
+              <RotateCcw className="w-5 h-5" />
+            </button>
+
+            <button 
+              onClick={handleExportData}
+              disabled={data.length === 0}
+              className={`p-3 rounded-xl font-bold border transition-all ${
+                data.length > 0
+                ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white'
+                : 'bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed'
+              }`}
+              title="Export CSV"
+            >
+              <Download className="w-5 h-5" />
+            </button>
+
+            <button 
+              onClick={() => setIsRunning(!isRunning)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-lg transition-all ${
+                isRunning 
+                  ? 'bg-red-500/10 text-red-400 border border-red-500/50 hover:bg-red-500/20' 
+                  : 'bg-green-500/10 text-green-400 border border-green-500/50 hover:bg-green-500/20'
+              }`}
+            >
+              {isRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              {isRunning ? 'PAUSE' : 'START SIMULATION'}
+            </button>
+          </div>
         </div>
 
         {/* DASHBOARD GRID */}

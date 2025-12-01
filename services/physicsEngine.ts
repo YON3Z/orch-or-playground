@@ -73,8 +73,29 @@ export const PhysicsKernel = {
     return base * ciss_boost;
   },
 
+  // Simulates Neuroplasticity based on Microdosing (Experiment D)
+  neuroplasticity: (dose: number, frequency: number): number => {
+    // Optimal microdose range is ~0.1 - 0.3g equivalent psilocybin
+    // Modeling an inverted-U curve for cognitive benefit vs dose.
+    
+    const optimalDose = 0.2; // Normalized unit
+    const doseFactor = Math.max(0, dose / 10); // Scale input to range
+    
+    // Plasticity boost function: rises with dose, then plateaus or becomes chaotic
+    const basePlasticity = 1.0;
+    const boost = 2.5;
+    
+    // Frequency factor: constant dosing leads to tolerance (downregulation)
+    // Frequency 0.3 (every 3 days) is optimal. 1.0 (daily) reduces effect.
+    const tolerance = Math.max(0.5, 1 - Math.abs(frequency - 0.33));
+
+    const effect = doseFactor * Math.exp(-doseFactor / (optimalDose * 2));
+    
+    return basePlasticity + (boost * effect * tolerance);
+  },
+
   // Main tick function to generate next data point
-  tick: (timestamp: number, mode: 'A' | 'B' | 'C', params: PhysicsParams) => {
+  tick: (timestamp: number, mode: 'A' | 'B' | 'C' | 'D', params: PhysicsParams) => {
     let value = 0;
     let threshold = 0;
     let noiseVal = 0;
@@ -102,6 +123,15 @@ export const PhysicsKernel = {
         value = Math.min(100, Math.max(0, value)); // Clamp
         noiseVal = params.noiseFloor;
         threshold = 80; // High coherence threshold
+        break;
+      }
+      case 'D': {
+        const plasticity = PhysicsKernel.neuroplasticity(params.microDose, params.doseFreq);
+        // Add "Neural Jitter"
+        const jitterD = (Math.random() - 0.5) * 0.1;
+        value = plasticity + jitterD;
+        noiseVal = jitterD;
+        threshold = 1.5; // Target plasticity threshold
         break;
       }
     }

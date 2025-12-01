@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Zap, Scale, Waves } from 'lucide-react';
+import { Settings, Zap, Scale, Waves, Sprout } from 'lucide-react';
 import { ExperimentMode, PhysicsParams } from '../types';
 
 interface ControlsProps {
@@ -18,6 +18,7 @@ export const Controls: React.FC<ControlsProps> = ({ mode, params, setParams, cur
     if (mode === 'A') return currentValue > 1.5 ? "COHERENT" : "DECOHERENT";
     if (mode === 'B') return currentValue > 250 ? "PENROSE LIMIT" : "THERMAL NOISE";
     if (mode === 'C') return Math.abs(params.frequency - 7.83) < 0.5 ? "PHASE LOCKED" : "DRIFTING";
+    if (mode === 'D') return currentValue > 1.8 ? "OPTIMIZED PLASTICITY" : "BASELINE";
     return "UNKNOWN";
   };
 
@@ -109,10 +110,41 @@ export const Controls: React.FC<ControlsProps> = ({ mode, params, setParams, cur
             </div>
             <button 
               onClick={() => updateParam('frequency', 7.83)}
-              className="w-full py-2 bg-slate-800 hover:bg-slate-700 border border-pink-500/30 text-pink-300 text-xs font-mono rounded transition-colors"
+              className={`w-full py-2 bg-slate-800 hover:bg-slate-700 border border-pink-500/30 text-pink-300 text-xs font-mono rounded transition-colors ${params.frequency === 7.83 ? 'animate-pulse ring-2 ring-pink-500' : ''}`}
             >
               SNAP TO SCHUMANN (7.83 HZ)
             </button>
+          </div>
+        )}
+
+        {mode === 'D' && (
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between mb-2">
+                <label className="text-sm font-medium text-indigo-200">Dose ({params.microDose?.toFixed(2)} g)</label>
+                <span className="text-xs text-slate-500">Optimal: ~0.2g</span>
+              </div>
+              <input 
+                type="range" min="0" max="5" step="0.1" value={params.microDose} 
+                onChange={(e) => updateParam('microDose', Number(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              />
+            </div>
+            <div>
+              <div className="flex justify-between mb-2">
+                <label className="text-sm font-medium text-slate-300">Frequency (Interval)</label>
+                <span className="text-xs text-slate-500">Target: Every 3 Days</span>
+              </div>
+              <input 
+                type="range" min="0.1" max="1.0" step="0.05" value={params.doseFreq} 
+                onChange={(e) => updateParam('doseFreq', Number(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-slate-400"
+              />
+              <div className="flex justify-between text-xs text-slate-500 font-mono mt-1">
+                 <span>Weekly</span>
+                 <span>Daily</span>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -120,10 +152,11 @@ export const Controls: React.FC<ControlsProps> = ({ mode, params, setParams, cur
       {/* STATUS CARD */}
       <div className="bg-slate-900 rounded-2xl border border-slate-800 p-6 shadow-xl">
         <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-lg ${mode === 'A' ? 'bg-cyan-500/20 text-cyan-400' : mode === 'B' ? 'bg-orange-500/20 text-orange-400' : 'bg-pink-500/20 text-pink-400'}`}>
+          <div className={`p-3 rounded-lg ${mode === 'A' ? 'bg-cyan-500/20 text-cyan-400' : mode === 'B' ? 'bg-orange-500/20 text-orange-400' : mode === 'C' ? 'bg-pink-500/20 text-pink-400' : 'bg-indigo-500/20 text-indigo-400'}`}>
             {mode === 'A' && <Zap className="w-6 h-6" />}
             {mode === 'B' && <Scale className="w-6 h-6" />}
             {mode === 'C' && <Waves className="w-6 h-6" />}
+            {mode === 'D' && <Sprout className="w-6 h-6" />}
           </div>
           <div>
             <div className="text-xs font-bold text-slate-500 mb-1">SYSTEM STATE</div>

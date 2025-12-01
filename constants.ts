@@ -24,5 +24,13 @@ export const THEORY_DATA: Record<ExperimentMode, ExperimentTheory> = {
     hypothesis: "The Cardiac Binary utilizes environmental 'Zeitgebers' (7.83 Hz) to phase-lock the organism's quantum state via hemodynamic rectification.",
     citation: "Nelson (2025), McCraty (2025)",
     controls: ["Field Intensity (pT)", "Frequency Stability", "Shielding"]
+  },
+  D: {
+    title: "Microdosing Neuroplasticity",
+    mechanism: "5-HT2A Receptor Agonism & BDNF Upregulation",
+    equation: "P(t) = P_0 + α · dose · exp(-dose/dose_opt)",
+    hypothesis: "Sub-perceptual doses of psilocybin enhance neural plasticity and network flexibility without inducing entropic overload (hallucinations), optimizing the 'Sattvic' coherent state.",
+    citation: "Cavanna et al. (2024), PMC11311906 (2024)",
+    controls: ["Dose (mg)", "Frequency (Days)", "Set & Setting"]
   }
 };

@@ -1,4 +1,4 @@
-export type ExperimentMode = 'A' | 'B' | 'C';
+export type ExperimentMode = 'A' | 'B' | 'C' | 'D';
 
 export interface SimulationData {
   time: number;
@@ -26,4 +26,7 @@ export interface PhysicsParams {
   // Exp C
   frequency: number;
   noiseFloor: number;
+  // Exp D
+  microDose: number;
+  doseFreq: number;
 }
